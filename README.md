@@ -32,12 +32,10 @@ You should get a ✅/❌ status check on the PR.
 
 ---
 
-## 💡 Hints (Step-by-Step Guide)
+## 💡 Hints (Fill in the blanks!)
 
-To build your workflow, you need to combine a few standard GitHub Actions. Think of them as Lego blocks.
+To build your workflow, you need to combine standard GitHub Actions. You will need to look up the exact names of the actions (like checkout and setup-python) on the GitHub Marketplace.
 
-**Step 1: The Skeleton**
-Start your file by defining the name, the trigger, and the job:
 ```yaml
 name: CI Pipeline
 on: [pull_request]
@@ -46,32 +44,25 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      # Your steps will go here
-```
-
-**Step 2: Fetch Code and Setup Python**
-Under `steps:`, you always need to check out your code first, then install the language environment. Use these exact actions:
-```yaml
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: # TODO: Find the standard checkout action (v4)
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: # TODO: Find the standard setup-python action (v5)
         with:
-          python-version: '3.10'
-          cache: 'pip' # This speeds up your runs!
-```
+          # TODO: Specify python-version (e.g., '3.10') and enable pip caching
 
-**Step 3: Install and Run**
-Now add standard run commands just like you would in your terminal:
-```yaml
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
       - name: Run Formatting Check
-        run: black --check .
-        
-      # Now add your own steps for 'ruff check .' and 'pytest'!
+        run: # TODO: Write the command to run black in check mode
+
+      - name: Run Linter
+        run: # TODO: Write the command to run ruff
+
+      - name: Run Tests
+        run: # TODO: Write the command to run pytest
 ```
 
 ---
@@ -103,7 +94,6 @@ Enhance your repository with **security automation** and **PR feedback** by impl
 2. Click the **Security** tab -> **Code scanning** -> **Configure scanning tool**.
 3. Choose **CodeQL Analysis** (Advanced Setup). 
 4. GitHub will generate `codeql.yml` for you. Just commit it to your repository!
-*(Note: CodeQL requires `security-events: write` permissions, which the generated file handles automatically).*
 
 ---
 
@@ -111,14 +101,15 @@ Enhance your repository with **security automation** and **PR feedback** by impl
 
 **💡 How to do it:** Dependabot doesn't use standard workflows. It uses a specific config file.
 1. Create `.github/dependabot.yml`.
-2. Use this template and fill in the missing `directory` and `schedule` details based on the official docs:
+2. Use this template and consult the GitHub Dependabot documentation to fill in the blanks:
+
 ```yaml
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/" # Where are your requirements files?
+  - package-ecosystem: # TODO: What is the ecosystem name for Python pip?
+    directory: # TODO: Where are your requirements files located? (usually "/")
     schedule:
-      interval: "weekly" 
+      interval: # TODO: Set this to weekly
 ```
 
 ---
@@ -127,11 +118,11 @@ updates:
 
 **💡 How to do it:** 1. Open your `ci.yml` from Task 1.
 2. Add a **second job** right below your first one. 
-3. Use the `needs` keyword so it only runs if the tests pass, and use `actions/github-script` to interact with the PR:
+3. Use `actions/github-script` to interact with the GitHub API. 
 
 ```yaml
   pr-comment:
-    needs: build-and-test # Must match the name of your first job!
+    needs: # TODO: Which job must finish successfully before this runs?
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write # Required to post a comment
@@ -140,21 +131,15 @@ updates:
         uses: actions/github-script@v7
         with:
           script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '✅ CI passed: tests + lint + formatting are green!'
-            })
+            // TODO: Use github.rest.issues.createComment to post a message.
+            // You will need to pass an object with: issue_number, owner, repo, and body.
+            // Check out the actions/github-script docs for an exact example!
 ```
 
 ---
 
 ## 📦 How to show your work?
-- Open a PR with the new files:
-  - `.github/workflows/codeql.yml`
-  - `.github/dependabot.yml`
-  - updated `.github/workflows/ci.yml` (adds PR comment job)
+- Open a PR with the new files.
 - Ensure:
   - CodeQL workflow runs successfully
   - Dependabot config is present
@@ -177,68 +162,52 @@ Create a GitHub Actions workflow that works like a **delivery pipeline**:
 
 ### (A) Docker Hub auth via GitHub Secrets
 1. Go to your repository **Settings → Secrets and variables → Actions**.
-2. Add `DOCKERHUB_USERNAME`.
-3. Add `DOCKERHUB_TOKEN` (provided during class).
-
----
+2. Add `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (token provided during class).
 
 ### (B) Setup the Workflow Skeleton
 1. Create `.github/workflows/docker.yml`.
 2. Trigger it **only** on `push` to `main` (never `pull_request` for deployments!).
 
-### (C & D) Generate Tags, Build, and Authenticate
+### (C, D, E) The Build, Scan, and Push Job
 
-**💡 Step-by-Step Guide for the Job:**
+**💡 The Workflow Steps:**
+You will need to search the GitHub Marketplace for the official Docker actions (`login-action`, `build-push-action`) and the Aqua Security Trivy action.
 
-**1. Create a variable for your commit SHA** so you can tag your image uniquely:
 ```yaml
-      - name: Get Short SHA
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        
+      - name: Get Short SHA (Provided)
         run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-```
 
-**2. Log in to DockerHub** using the secrets you created:
-```yaml
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: # TODO: Find the official docker login-action
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-```
+          username: # TODO: Pass your secret here
+          password: # TODO: Pass your secret here
 
-**3. Build the Image (but don't push yet!)** We need the image built locally so Trivy can scan it. Notice `load: true`:
-```yaml
       - name: Build Docker image (local)
-        uses: docker/build-push-action@v5
+        uses: # TODO: Find the official docker build-push-action
         with:
           context: .
-          load: true # Keeps image in the runner for scanning
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/shared-repo:yourname-${{ env.SHORT_SHA }}
-```
+          load: true # CRITICAL: This keeps the image in the runner so Trivy can scan it
+          tags: # TODO: Format tag as -> ${{ secrets.DOCKERHUB_USERNAME }}/shared-repo:yourname-${{ env.SHORT_SHA }}
 
-### (E) Container scanning & Final Push
-
-**4. Scan the image with Trivy.** Use the official Aqua Security action. Tell it to look at the exact tag you just built:
-```yaml
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/shared-repo:yourname-${{ env.SHORT_SHA }}'
+          image-ref: # TODO: Pass the exact same tag you just generated above!
           format: 'table'
-          exit-code: '1' # Fails the pipeline if vulnerabilities are found!
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-```
+          exit-code: '1' # Fails the pipeline if vulnerabilities are found
+          # TODO: Check Trivy docs to configure 'vuln-type' and set 'severity' to 'CRITICAL,HIGH'
 
-**5. Push the Image.**
-If Trivy passes, the pipeline will continue. Now you can safely push!
-```yaml
       - name: Push Docker image
-        uses: docker/build-push-action@v5
+        uses: # TODO: Use the build-push-action again!
         with:
           context: .
           push: true # Now we actually push it!
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/shared-repo:yourname-${{ env.SHORT_SHA }}
+          tags: # TODO: Pass the exact same tag again
 ```
 
 ---
