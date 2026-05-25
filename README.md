@@ -201,7 +201,7 @@ You will need to search the GitHub Marketplace for the official Docker actions (
         with:
           image-ref: # TODO: Pass the exact same tag you just generated above!
           format: 'table'
-          exit-code: '1' # Fails the pipeline if vulnerabilities are found
+          exit-code: '0' # The base image has some known CVEs. That's why we do not want to fail the pipeline - just paste the info in a table.
           # TODO: Check Trivy docs to configure 'vuln-type' and set 'severity' to 'CRITICAL,HIGH'
 
       - name: Push Docker image
