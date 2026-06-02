@@ -1,6 +1,8 @@
 name: CI Pipeline
 
-on: [pull_request]
+on:
+  pull_request:
+  push:
 
 jobs:
   build-and-test:
@@ -13,8 +15,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-          cache: 'pip'
+          python-version: "3.10"
+          cache: "pip"
 
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
@@ -27,4 +29,24 @@ jobs:
 
       - name: Run Tests
         run: pytest
-# a
+
+  pr-comment:
+    needs: build-and-test
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "✅ CI passed: tests, linting and formatting are green."
+            })
